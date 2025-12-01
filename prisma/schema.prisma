@@ -1,0 +1,317 @@
+// Bug Bucket - Prisma Schema
+// Production-ready bug tracker database schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Authentication & Users
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // Hashed password for email/password auth
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts           Account[]
+  sessions           Session[]
+  ownedProjects      Project[]           @relation("ProjectOwner")
+  projectMemberships ProjectMember[]
+  assignedBugs       Bug[]               @relation("BugAssignee")
+  bugComments        BugComment[]
+  activityLogs       ActivityLog[]
+  notifications      Notification[]
+  createdBugs        Bug[]               @relation("BugCreator")
+
+  @@index([email])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// Projects
+// ============================================
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  visibility  Visibility @default(PRIVATE)
+  avatar      String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  owner        User            @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members      ProjectMember[]
+  bugGroups    BugGroup[]
+  bugs         Bug[]
+  activityLogs ActivityLog[]
+  notifications Notification[]
+
+  @@index([ownerId])
+  @@index([visibility])
+  @@map("projects")
+}
+
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  role      ProjectRole @default(MEMBER)
+  addedAt   DateTime @default(now())
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+enum ProjectRole {
+  OWNER
+  MEMBER
+}
+
+// ============================================
+// Bug Groups
+// ============================================
+
+model BugGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  projectId   String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  bugs    Bug[]
+
+  @@index([projectId])
+  @@index([projectId, order])
+  @@map("bug_groups")
+}
+
+// ============================================
+// Bugs
+// ============================================
+
+model Bug {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  status      BugStatus @default(OPEN)
+  priority    BugPriority @default(MEDIUM)
+  deadline    DateTime?
+  projectId   String
+  bugGroupId  String
+  assignedToId String?
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  bugGroup     BugGroup       @relation(fields: [bugGroupId], references: [id], onDelete: Cascade)
+  assignedTo   User?          @relation("BugAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy    User           @relation("BugCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  comments     BugComment[]
+  attachments  Attachment[]
+  activityLogs ActivityLog[]
+
+  @@index([projectId])
+  @@index([bugGroupId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([priority])
+  @@index([deadline])
+  @@index([projectId, status])
+  @@index([projectId, priority])
+  @@map("bugs")
+}
+
+enum BugStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  RESOLVED
+  CLOSED
+}
+
+enum BugPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ============================================
+// Comments
+// ============================================
+
+model BugComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  bugId     String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  bug         Bug          @relation(fields: [bugId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attachments Attachment[]
+
+  @@index([bugId])
+  @@index([userId])
+  @@index([bugId, createdAt])
+  @@map("bug_comments")
+}
+
+// ============================================
+// Attachments
+// ============================================
+
+model Attachment {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  bugId        String?
+  commentId    String?
+  uploadedAt   DateTime @default(now())
+
+  // Relations
+  bug     Bug?        @relation(fields: [bugId], references: [id], onDelete: Cascade)
+  comment BugComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([bugId])
+  @@index([commentId])
+  @@map("attachments")
+}
+
+// ============================================
+// Activity Log
+// ============================================
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String   // e.g., "created", "updated", "status_changed", "assigned"
+  entityType String  // e.g., "bug", "project", "comment"
+  entityId  String
+  metadata  Json?    // Store additional context
+  projectId String?
+  bugId     String?
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  bug     Bug?     @relation(fields: [bugId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([bugId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+// ============================================
+// Notifications
+// ============================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  userId    String
+  projectId String?
+  metadata  Json?    // Store additional context (bugId, commentId, etc.)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  BUG_ASSIGNED
+  BUG_STATUS_CHANGED
+  BUG_COMMENT
+  PROJECT_MEMBER_ADDED
+  DEADLINE_APPROACHING
+}
