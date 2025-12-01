@@ -2,8 +2,6 @@
 
 <div align="center">
 
-![Bug Bucket Logo](https://api.dicebear.com/7.x/shapes/svg?seed=bugbucket&backgroundColor=6366f1)
-
 **A modern, production-ready bug tracker for development teams**
 
 [![CI](https://github.com/yourusername/bug-bucket/workflows/CI/badge.svg)](https://github.com/yourusername/bug-bucket/actions)
