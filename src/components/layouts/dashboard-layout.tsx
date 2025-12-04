@@ -1,11 +1,10 @@
 "use client"
 
-import { ReactNode } from "react"
+import { ReactNode, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { signOut } from "next-auth/react"
 import Link from "next/link"
 import { Bug, Home, FolderKanban, Settings, LogOut, Menu, X, User } from "lucide-react"
-import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -42,8 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const unreadCount = notifications.filter((n: any) => !n.read).length
 
   const handleSignOut = async () => {
-    await signOut({ redirect: false })
-    router.push("/auth/signin")
+    await signOut({ redirect: true, callbackUrl: "/" })
   }
 
   const handleNotificationClick = (notification: any) => {

@@ -151,6 +151,8 @@ export function useNotifications() {
       return data.notifications
     },
     refetchInterval: 30000, // Refetch every 30 seconds
+    retry: false, // Don't retry failed requests
+    staleTime: 0, // Always consider data stale so it refetches appropriately
   })
 }
 
