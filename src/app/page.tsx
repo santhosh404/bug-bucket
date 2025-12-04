@@ -16,6 +16,8 @@ import {
   Coffee,
 } from "lucide-react"
 
+const VERSION = process.env.NEXT_PUBLIC_APP_VERSION
+
 export default async function HomePage() {
   const session = await auth()
 
@@ -44,7 +46,7 @@ export default async function HomePage() {
               Bug Bucket
             </span>
             <Badge variant="secondary" className="ml-2 hidden sm:inline-flex">
-              v1.0
+              {VERSION}
             </Badge>
           </div>
           <div className="flex items-center gap-4">
@@ -102,7 +104,7 @@ export default async function HomePage() {
             asChild
             className="hover:scale-105 transition-transform"
           >
-            <Link href="https://github.com/yourusername/bug-bucket" target="_blank">
+            <Link href="https://github.com/santhosh404/bug-bucket" target="_blank">
               <span className="mr-2">⭐</span>
               Star on GitHub
             </Link>
@@ -282,7 +284,7 @@ export default async function HomePage() {
                 asChild
                 className="hover:scale-105 transition-transform"
               >
-                <Link href="https://github.com/yourusername/bug-bucket" target="_blank">
+                <Link href="https://github.com/santhosh404/bug-bucket" target="_blank">
                   <span className="mr-2">⭐</span>
                   Star on GitHub
                 </Link>
@@ -329,14 +331,16 @@ export default async function HomePage() {
 
             <div className="flex items-center gap-6 text-sm">
               <Link
-                href="https://github.com/yourusername/bug-bucket"
+                href="https://github.com/santhosh404/bug-bucket"
                 className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+                target="_blank"
               >
                 <span>⭐</span> GitHub
               </Link>
               <Link
-                href="https://github.com/yourusername/bug-bucket/blob/main/LICENSE"
+                href="https://github.com/santhosh404/bug-bucket/blob/main/LICENSE"
                 className="text-muted-foreground hover:text-foreground transition-colors"
+                target="_blank"
               >
                 MIT License
               </Link>
