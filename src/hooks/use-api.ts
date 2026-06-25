@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import type { CreateProjectInput, CreateBugInput, UpdateBugInput, BugFilterInput } from "@/lib/validations"
 
 // Projects
 export function useProjects() {
@@ -32,7 +33,7 @@ export function useCreateProject() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: CreateProjectInput) => {
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,8 +56,16 @@ export function useCreateProject() {
 }
 
 // Bugs
-export function useBugs(projectId: string | undefined, filters?: any) {
-  const queryString = filters ? new URLSearchParams(filters).toString() : ""
+export function useBugs(projectId: string | undefined, filters?: Partial<BugFilterInput>) {
+  const queryString = filters
+    ? new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(filters)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        )
+      ).toString()
+    : ""
 
   return useQuery({
     queryKey: ["bugs", projectId, filters],
@@ -90,7 +99,7 @@ export function useCreateBug() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: CreateBugInput) => {
       const res = await fetch("/api/bugs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -117,7 +126,7 @@ export function useUpdateBug() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ bugId, ...data }: any) => {
+    mutationFn: async ({ bugId, ...data }: { bugId: string } & UpdateBugInput) => {
       const res = await fetch(`/api/bugs/${bugId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
