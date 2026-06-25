@@ -39,15 +39,12 @@ jobs:
           additional_permissions: |
             actions: read
 
-          prompt: |
-            You are an automated bug-fixing assistant. When triggered by an issue:
-            1. Analyze the issue description and understand the bug.
-            2. Find the relevant code and implement the fix.
-            3. Create a new branch named fix/issue-${{ github.event.issue.number }}-<short-description>.
-            4. Commit your changes with a clear commit message referencing the issue.
-            5. Open a pull request targeting the main branch with:
-               - Title: "fix: <short description> (closes #${{ github.event.issue.number }})"
-               - Body summarizing what was changed and why.
-               - The PR body must include "Closes #${{ github.event.issue.number }}" so GitHub auto-closes the issue when the PR is merged.
-            Use the `gh` CLI to create the branch, commit, and open the PR.
+          claude_args: >-
+            --allowedTools
+            "Bash(git checkout -b *)"
+            "Bash(git add *)"
+            "Bash(git commit *)"
+            "Bash(git push *)"
+            "Bash(gh pr create *)"
+            "Bash(gh issue comment *)"
 
