@@ -13,10 +13,10 @@ on:
 jobs:
   claude:
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@elon')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@elon')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@elon')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@elon') || contains(github.event.issue.title, '@elon')))
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@bug-bucket')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@bug-bucket')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@bug-bucket')) ||
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@bug-bucket') || contains(github.event.issue.title, '@bug-bucket')))
     runs-on: ubuntu-latest
     permissions:
       contents: write
