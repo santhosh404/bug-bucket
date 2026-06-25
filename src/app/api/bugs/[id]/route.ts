@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { requireAuth, canManageBug } from "@/lib/auth-utils"
+import { requireAuth, canManageBug, canAccessProject } from "@/lib/auth-utils"
 import { updateBugSchema } from "@/lib/validations"
 import { z } from "zod"
 
@@ -12,7 +12,7 @@ type RouteContext = {
 export async function GET(req: NextRequest, context: RouteContext) {
   try {
     const { id } = await context.params
-    await requireAuth()
+    const user = await requireAuth()
 
     const bug = await prisma.bug.findUnique({
       where: { id },
@@ -84,6 +84,11 @@ export async function GET(req: NextRequest, context: RouteContext) {
 
     if (!bug) {
       return NextResponse.json({ error: "Bug not found" }, { status: 404 })
+    }
+
+    const hasAccess = await canAccessProject(bug.projectId, user.id)
+    if (!hasAccess) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     return NextResponse.json({ bug })
