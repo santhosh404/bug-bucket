@@ -3,25 +3,15 @@ import { prisma } from "@/lib/prisma"
 import { signUpSchema } from "@/lib/validations"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
+import { Prisma } from "@prisma/client"
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { name, email, password } = signUpSchema.parse(body)
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    })
-
-    if (existingUser) {
-      return NextResponse.json({ error: "User with this email already exists" }, { status: 400 })
-    }
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create user
     const user = await prisma.user.create({
       data: {
         name,
@@ -43,6 +33,10 @@ export async function POST(req: NextRequest) {
         { error: "Validation error", details: error.errors },
         { status: 400 }
       )
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({ error: "User with this email already exists" }, { status: 409 })
     }
 
     console.error("Signup error:", error)
