@@ -42,7 +42,11 @@ jobs:
         id: build-prompt
         if: github.event_name == 'issues' && github.event.action == 'opened'
         run: |
-          echo "prompt=A new GitHub issue has been opened. Title: \"${{ github.event.issue.title }}\". Body: ${{ github.event.issue.body }}. Please analyze this issue carefully, implement the necessary fix in the codebase, create a new branch, commit the changes, and open a pull request. Post progress updates as comments on issue #${{ github.event.issue.number }} as you work." >> $GITHUB_OUTPUT
+          {
+            echo 'prompt<<PROMPT_EOF'
+            echo "A new GitHub issue #${{ github.event.issue.number }} has been opened: \"${{ github.event.issue.title }}\". Run 'gh issue view ${{ github.event.issue.number }}' to read the full details. Analyze the problem, implement a fix in the codebase, create a new branch, commit your changes, and open a pull request. Post progress updates as comments on issue #${{ github.event.issue.number }} as you work."
+            echo 'PROMPT_EOF'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Run Claude Code
         id: claude
