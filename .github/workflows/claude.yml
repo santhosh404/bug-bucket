@@ -30,11 +30,27 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Acknowledge issue
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "🤖 **Claude is on it!** I've picked up this issue and am starting to work on it now. I'll post updates here as I make progress."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build prompt for new issue
+        id: build-prompt
+        if: github.event_name == 'issues' && github.event.action == 'opened'
+        run: |
+          echo "prompt=A new GitHub issue has been opened. Title: \"${{ github.event.issue.title }}\". Body: ${{ github.event.issue.body }}. Please analyze this issue carefully, implement the necessary fix in the codebase, create a new branch, commit the changes, and open a pull request. Post progress updates as comments on issue #${{ github.event.issue.number }} as you work." >> $GITHUB_OUTPUT
+
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          direct_prompt: ${{ steps.build-prompt.outputs.prompt }}
 
           additional_permissions: |
             actions: read
