@@ -12,11 +12,12 @@ on:
 
 jobs:
   claude:
-    if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && github.event.action == 'opened')
+    if: false  # Temporarily disabled — remove this line to restore
+    # if: |
+    #   (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+    #   (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+    #   (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+    #   (github.event_name == 'issues' && github.event.action == 'opened')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -38,11 +39,19 @@ jobs:
           fetch-depth: 1
           token: ${{ steps.app-token.outputs.token }}
 
+      - name: Configure git identity
+        run: |
+          APP_SLUG=$(gh api /app --jq '.slug')
+          git config --global user.name "${APP_SLUG}[bot]"
+          git config --global user.email "${{ secrets.APP_ID }}+${APP_SLUG}[bot]@users.noreply.github.com"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
       - name: Acknowledge issue
         if: github.event_name == 'issues' && github.event.action == 'opened'
         run: |
           gh issue comment ${{ github.event.issue.number }} \
-            --body "🤖 **Claude is on it!** I've picked up this issue and am starting to work on it now. I'll post updates here as I make progress."
+            --body "🤖 **Elon is on it!** I've picked up this issue and am starting to work on it now. I'll post updates here as I make progress."
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
@@ -66,13 +75,4 @@ jobs:
 
           additional_permissions: |
             actions: read
-
-          claude_args: >-
-            --allowedTools
-            "Bash(git checkout -b *)"
-            "Bash(git add *)"
-            "Bash(git commit *)"
-            "Bash(git push *)"
-            "Bash(gh pr create *)"
-            "Bash(gh issue comment *)"
 
