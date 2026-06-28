@@ -15,11 +15,29 @@ function Avatar({ className, ...props }: React.ComponentProps<typeof AvatarPrimi
   )
 }
 
-function AvatarImage({ className, ...props }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+function AvatarImage({
+  className,
+  src,
+  onError,
+  ...props
+}: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  const [hasError, setHasError] = React.useState(false)
+
+  React.useEffect(() => {
+    setHasError(false)
+  }, [src])
+
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       className={cn("aspect-square size-full", className)}
+      // Passing undefined src forces Radix to set imageLoadingStatus to "error", ensuring
+      // AvatarFallback renders instead of showing a broken image icon on load failure.
+      src={hasError ? undefined : src}
+      onError={(e) => {
+        setHasError(true)
+        onError?.(e)
+      }}
       {...props}
     />
   )
