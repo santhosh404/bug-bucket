@@ -74,3 +74,5 @@ jobs:
           additional_permissions: |
             actions: read
 
+          claude_args: --dangerously-skip-permissions
+
