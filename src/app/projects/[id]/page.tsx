@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { redirect } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useParams } from "next/navigation"
@@ -22,6 +23,15 @@ export default function ProjectDetailPage() {
   const params = useParams()
   const projectId = params?.id as string
   const { data: project, isLoading } = useProject(projectId)
+  const [activeTab, setActiveTab] = useState("bugs")
+  const [bugsResetKey, setBugsResetKey] = useState(0)
+
+  const handleTabChange = (newTab: string) => {
+    if (newTab === "bugs" && activeTab !== "bugs") {
+      setBugsResetKey((k) => k + 1)
+    }
+    setActiveTab(newTab)
+  }
 
   if (status === "loading" || isLoading) {
     return <ProjectDetailSkeleton />
@@ -69,7 +79,7 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="bugs" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList>
             <TabsTrigger value="bugs" className="gap-2 cursor-pointer">
               <Bug className="h-4 w-4" />
@@ -96,7 +106,7 @@ export default function ProjectDetailPage() {
           </TabsList>
 
           <TabsContent value="bugs" className="space-y-4">
-            <ProjectBugsTab project={project} isOwner={isOwner} />
+            <ProjectBugsTab key={bugsResetKey} project={project} isOwner={isOwner} />
           </TabsContent>
 
           <TabsContent value="groups" className="space-y-4">

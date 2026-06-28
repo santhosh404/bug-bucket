@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { redirect } from "next/navigation"
+import { useState, useEffect } from "react"
+import { redirect, usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { DashboardLayout } from "@/components/layouts/dashboard-layout"
@@ -29,8 +29,13 @@ import { CreateProjectForm } from "@/components/forms/create-project-form"
 export default function ProjectsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
   const [searchQuery, setSearchQuery] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+
+  useEffect(() => {
+    setSearchQuery("")
+  }, [pathname])
   const { data: projects = [], isLoading } = useProjects()
 
   if (status === "loading") {

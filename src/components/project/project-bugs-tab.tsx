@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -61,7 +62,12 @@ const priorityVariants: Record<string, "default" | "secondary" | "destructive" |
 
 export function ProjectBugsTab({ project, isOwner }: ProjectBugsTabProps) {
   const { data: session } = useSession()
+  const pathname = usePathname()
   const [searchQuery, setSearchQuery] = useState("")
+
+  useEffect(() => {
+    setSearchQuery("")
+  }, [pathname])
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
   const [bugGroupFilter, setBugGroupFilter] = useState<string>("all")
